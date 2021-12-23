@@ -1,0 +1,1 @@
+/Users/rredoh/Projects/Android/wood-log-counter-android/openCVLibrary454/build/intermediates/cxx/Debug/6e4b283n/obj/armeabi-v7a

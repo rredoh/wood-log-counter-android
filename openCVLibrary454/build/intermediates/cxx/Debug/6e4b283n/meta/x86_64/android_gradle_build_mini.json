@@ -1,0 +1,33 @@
+{
+  "buildFiles": [
+    "/Users/rredoh/Projects/Android/wood-log-counter-android/openCVLibrary454/libcxx_helper/CMakeLists.txt"
+  ],
+  "cleanCommandsComponents": [
+    [
+      "/Users/rredoh/Library/Android/sdk/cmake/3.10.2.4988404/bin/ninja",
+      "-C",
+      "/Users/rredoh/Projects/Android/wood-log-counter-android/openCVLibrary454/.cxx/Debug/6e4b283n/x86_64",
+      "clean"
+    ]
+  ],
+  "buildTargetsCommandComponents": [
+    "/Users/rredoh/Library/Android/sdk/cmake/3.10.2.4988404/bin/ninja",
+    "-C",
+    "/Users/rredoh/Projects/Android/wood-log-counter-android/openCVLibrary454/.cxx/Debug/6e4b283n/x86_64",
+    "{LIST_OF_TARGETS_TO_BUILD}"
+  ],
+  "libraries": {
+    "opencv_jni_shared-Debug-x86_64": {
+      "artifactName": "opencv_jni_shared",
+      "buildCommandComponents": [
+        "/Users/rredoh/Library/Android/sdk/cmake/3.10.2.4988404/bin/ninja",
+        "-C",
+        "/Users/rredoh/Projects/Android/wood-log-counter-android/openCVLibrary454/.cxx/Debug/6e4b283n/x86_64",
+        "opencv_jni_shared"
+      ],
+      "abi": "x86_64",
+      "output": "/Users/rredoh/Projects/Android/wood-log-counter-android/openCVLibrary454/.cxx/Debug/6e4b283n/x86_64/libopencv_jni_shared.a",
+      "runtimeFiles": []
+    }
+  }
+}
