@@ -14,6 +14,7 @@ import android.util.Log
 import android.view.View
 import android.widget.Button
 import android.widget.ImageView
+import android.widget.TextView
 import android.widget.Toast
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.app.AlertDialog
@@ -31,6 +32,7 @@ class MainActivity : AppCompatActivity() {
 
     private lateinit var imageView: ImageView
     private lateinit var button: Button
+    private lateinit var textView: TextView
 
     private val permissionId = 88
     private var tempUri: Uri? = null
@@ -41,17 +43,16 @@ class MainActivity : AppCompatActivity() {
 
         imageView = findViewById(R.id.imageView)
         button = findViewById(R.id.btn_choose_image)
+        textView = findViewById(R.id.textView)
+
+        if (OpenCVLoader.initDebug()) {
+            Log.d("myTag", "OpenCV loaded")
+        }
 
         button.setOnClickListener {
-//            if(checkAndRequestPermissions()){
-//                chooseImage();
-//            }
-
-            cropImageResult.launch(
-                options {
-                    setGuidelines(CropImageView.Guidelines.ON)
-                }
-            )
+            if(checkAndRequestPermissions()){
+                chooseImage();
+            }
         }
 
 
@@ -179,12 +180,15 @@ class MainActivity : AppCompatActivity() {
 
     private val cropImageResult = registerForActivityResult(CropImageContract()) { result ->
         if (result.isSuccessful) {
-            val uriContent = result.uriContent
             val uriFilePath = result.getUriFilePath(this)
 
             val bitmap = BitmapFactory.decodeFile(uriFilePath)
-            imageView.setImageBitmap(bitmap)
+            val objectDetectionResult = ObjectDetection().detectCircle(bitmap)
+
+            imageView.setImageBitmap(objectDetectionResult.first)
             imageView.visibility = View.VISIBLE
+
+            textView.text = "Number of circle : " + objectDetectionResult.second
 
             tempUri?.let {
                 contentResolver.delete(it, null, null)
@@ -196,7 +200,6 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun getImageUri(bitmap: Bitmap): Uri? {
-        val bytes = ByteArrayOutputStream()
         val path = MediaStore.Images.Media.insertImage(
             contentResolver,
             bitmap,
