@@ -7,8 +7,10 @@ import android.content.pm.PackageManager
 import android.database.Cursor
 import android.graphics.Bitmap
 import android.graphics.BitmapFactory
+import android.net.Uri
 import android.os.Bundle
 import android.provider.MediaStore
+import android.util.Log
 import android.view.View
 import android.widget.Button
 import android.widget.ImageView
@@ -18,6 +20,11 @@ import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
+import com.canhub.cropper.CropImageContract
+import com.canhub.cropper.CropImageView
+import com.canhub.cropper.options
+import org.opencv.android.OpenCVLoader
+import java.io.ByteArrayOutputStream
 
 
 class MainActivity : AppCompatActivity() {
@@ -26,6 +33,7 @@ class MainActivity : AppCompatActivity() {
     private lateinit var button: Button
 
     private val permissionId = 88
+    private var tempUri: Uri? = null
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -35,10 +43,18 @@ class MainActivity : AppCompatActivity() {
         button = findViewById(R.id.btn_choose_image)
 
         button.setOnClickListener {
-            if(checkAndRequestPermissions()){
-                chooseImage();
-            }
+//            if(checkAndRequestPermissions()){
+//                chooseImage();
+//            }
+
+            cropImageResult.launch(
+                options {
+                    setGuidelines(CropImageView.Guidelines.ON)
+                }
+            )
         }
+
+
     }
 
     override fun onRequestPermissionsResult(
@@ -136,8 +152,14 @@ class MainActivity : AppCompatActivity() {
         if (result.resultCode == Activity.RESULT_OK) {
             result.data?.extras?.get("data")?.let {
                 val selectedImage = it as Bitmap
-                imageView.setImageBitmap(selectedImage);
-                imageView.visibility = View.VISIBLE
+                getImageUri(it)?.let { uri ->
+                    cropImageResult.launch(
+                        options(uri = uri) {
+                            setGuidelines(CropImageView.Guidelines.ON)
+                            setOutputCompressFormat(Bitmap.CompressFormat.PNG)
+                        }
+                    )
+                }
             }
         }
     }
@@ -145,25 +167,43 @@ class MainActivity : AppCompatActivity() {
     private val galleryResult = registerForActivityResult(ActivityResultContracts.StartActivityForResult()) { result ->
         if (result.resultCode == Activity.RESULT_OK) {
             result.data?.data?.let { selectedImage ->
-                val filePathColumn = arrayOf(MediaStore.Images.Media.DATA)
-                if (selectedImage != null) {
-                    val cursor: Cursor? = contentResolver.query(
-                        selectedImage,
-                        filePathColumn,
-                        null,
-                        null,
-                        null
-                    )
-                    if (cursor != null) {
-                        cursor.moveToFirst()
-                        val columnIndex: Int = cursor.getColumnIndex(filePathColumn[0])
-                        val picturePath: String = cursor.getString(columnIndex)
-                        imageView.setImageBitmap(BitmapFactory.decodeFile(picturePath))
-                        imageView.visibility = View.VISIBLE
-                        cursor.close()
+                cropImageResult.launch(
+                    options(uri = selectedImage) {
+                        setGuidelines(CropImageView.Guidelines.ON)
+                        setOutputCompressFormat(Bitmap.CompressFormat.PNG)
                     }
-                }
+                )
             }
         }
+    }
+
+    private val cropImageResult = registerForActivityResult(CropImageContract()) { result ->
+        if (result.isSuccessful) {
+            val uriContent = result.uriContent
+            val uriFilePath = result.getUriFilePath(this)
+
+            val bitmap = BitmapFactory.decodeFile(uriFilePath)
+            imageView.setImageBitmap(bitmap)
+            imageView.visibility = View.VISIBLE
+
+            tempUri?.let {
+                contentResolver.delete(it, null, null)
+            }
+        } else {
+            // an error occurred
+            val exception = result.error
+        }
+    }
+
+    private fun getImageUri(bitmap: Bitmap): Uri? {
+        val bytes = ByteArrayOutputStream()
+        val path = MediaStore.Images.Media.insertImage(
+            contentResolver,
+            bitmap,
+            "logs-image",
+            null
+        )
+        tempUri = Uri.parse(path)
+        return tempUri
     }
 }
